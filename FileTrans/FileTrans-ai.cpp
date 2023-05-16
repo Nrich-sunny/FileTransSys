@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <fstream>
+#include <thread>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -12,6 +13,24 @@ using namespace std;
 
 const int BUFFER_SIZE = 1024;
 const int SERVER_PORT = 8888;
+
+
+int receive_file(int client_socket) {
+        // 接收文件
+        char buffer[BUFFER_SIZE];
+        memset(buffer, 0, sizeof(buffer));
+        int recv_size = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+        if (recv_size < 0)
+        {
+            cout << "Failed to receive filename." << endl;
+            return -1;
+        }
+
+        string file_content = buffer;
+        cout << "Receive" << client_socket << endl;
+        cout << file_content << endl;
+        return 1;
+}
 
 int main()
 {
@@ -58,18 +77,8 @@ int main()
             return -1;
         }
 
-        // 接收文件名
-        char buffer[BUFFER_SIZE];
-        memset(buffer, 0, sizeof(buffer));
-        int recv_size = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
-        if (recv_size < 0)
-        {
-            cout << "Failed to receive filename." << endl;
-            return -1;
-        }
-
-        string filename = buffer;
-        cout << "Receive" << endl;
-        cout << filename << endl;
+        // 接收文件
+        std::thread recv_thread(receive_file, client_socket);  // 开启线程，调用 receive_file
+        recv_thread.join();  // pauses until first finishes, 这个操作完了之后才能 destroyed
     }
 }
